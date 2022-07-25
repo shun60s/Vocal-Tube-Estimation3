@@ -29,6 +29,7 @@ class Class_Curve_Fit1(object):
         self.peak_list0, drop_peak_list0, spec_out, fout_index, fout_index2, self.pout= self.fp6.get_fp(self.wav_file, frame_num=-1)
         print ('number of frames ', len( self.peak_list0 ))
         #print ('peak_list0.shape', self.peak_list0.shape)
+        self.sr    = self.fp6.sr
         self.fdata2= self.fp6.fdata2
         #
         peak1=self.peak_list0[:,0]
