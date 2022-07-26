@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vocal Tube Estimation 3   </title>
+<meta name="description" content="Estimation four tube model length and area about japanese vowels. " />
+<link href="style.css" rel="stylesheet">
+</head>
+<body>
+<div class="container-lg px-3 my-5 markdown-body">
+<h1>Vocal Tube Estimation 3   </h1>
+
+<p>Estimation four tube model length and area about japanese vowels. <br /></p>
+
+<p><a href="https://github.com/shun60s/Vocal-Tube-Estimation3/">github repository</a><br /></p>
+
+<h2>usage   </h2>
+
+<p>pks2tube5frame is main program.<br />
+It loads a vowel wav file(16Khz mono), LPC analysis, get peaks candidates and pitch(F0) candidate,
+exclude outliers using a cubic expression and interpolate about peaks and pitch(F0), and
+estimate four tube model length and area by grid search and scipy's optimize.fmin, downhill simplex algorithm.  <br /></p>
+
+<p>option:<br /></p>
+<ul>
+<li>wav_file  input vowel wav file(16Khz mono) path.  </li>
+<li>result_dir the path to store result figures that show estimated tube length and area with frequency response.   </li>
+<li>frame   use previous frame LA0 (estimated length and area) as initial value of scipy's optimize.fmin. specify start frame number. Or, negative value when OFF(default).   </li>
+<li>BPF_out  compute BPF and show frequency response. specify -B if compute BPF frequency response. 
+</li></ul>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+python pks2tube5frame.py -w wav/a_1-16k.wav -r result_figure_a -B
+</code></pre></div></div>
+<p>Human vocal tract moves smoothly and continuously.<br />
+However, LPC analysis peaks candidates and pitch(F0) candidate is sometimes discontinuously.<br />
+They are translated to continuous values using a cubic expression and interpolate.<br />
+ <img src="Figure_a_1-16k.png" alt="figure1" > <br /></p>
+
+<p>Following estimation result, tube length and area, are inconsistent. Their movement are not smoothly and continuously.<br />
+ <img src="Figure_result_figure_a.png" alt="figure2" > <br />
+These figures are in the result_figure_a folder.<br /></p>
+
+
+<p>And then, manually select a reasonable frame for human vowel vocal tract as start frame,<br />
+use previous frame LA0 (estimated length and area) as initial value of scipy's optimize.fmin,  and repeats its operation.<br /></p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+python pks2tube5frame.py -w wav/a_1-16k.wav -r result_figure_a -f 14 -B
+</code></pre></div></div>
+<p> <img src="Figure_result_figure_a_14.png" alt="figure3" > <br />
+These movement is almost smoothly and continuously. <br />
+These figures are in the result_figure_a/14 folder.<br /></p>
+
+<h2>License    </h2>
+<p>MIT<br /></p>
+
+</div>
+</body>
+</html>
