@@ -2,7 +2,7 @@
 
 #
 # Load wav (16Khz mono), LPC analysis, get peaks candidates and pitch(F0) candidate.
-# Exculde outliers using a cubic expression and interpolate about peaks and pitch(F0).
+# Exclude outliers using a cubic expression and interpolate about peaks and pitch(F0).
 # Estimate four tube model length and area by grid search and scipy's optimize.fmin, downhill simplex algorithm.
 #
 # argparse option:
