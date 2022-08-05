@@ -222,7 +222,7 @@ class Class_Analysis2(Class_Analysis1):
             # change from mel scale to linear
             func1 = interpolate.interp1d(self.mel.flist,self.out1[:,pos] , kind="cubic")
             fout1 = func1(self.freq_linear)
-            peaks, _ = find_peaks(fout1, distance= F0 * 0.9,  prominence=0.015)
+            peaks, _ = find_peaks(fout1, distance= F0 * 0.9,  prominence= max(fout1) * 0.1 )
             if len(peaks) > 0:
                 self.pout[l]= self.freq_linear[peaks[0]]
                 F0_new=self.pout[l]
