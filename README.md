@@ -40,6 +40,21 @@ python pks2tube5frame.py -w wav/a_1-16k.wav -r result_figure_a -f 14 -B
 These movement is almost smoothly and continuously.   
 These figures are in the result_figure_a/14 folder.  
 
+
+## Estimation vocal frequency response by BPF analysis  
+
+Voice BPF output has harmonic structure and it shows only digitized samples of vocal frequency response.  
+It's necessary to estimate vocal overall frequency response to know true peaks (formants) by any method.  
+Following is vocal frequency response estimation by curve fitting via F0 harmonic frequencies (fundamental and overtones). 
+
+```
+python BPF_analysis2.py -w wav/a_1-16k.wav
+```
+
+ ![figure4](docs/Figure_curve_fitting_via_F0_harmonic_a_14.png)   
+
+
+
 ## License    
 MIT  
 

@@ -17,6 +17,7 @@ import argparse
 from scipy import signal
 from scipy.signal import find_peaks
 from scipy import interpolate
+from scipy import optimize
 from scipy.io.wavfile import read as wavread
 from matplotlib import pyplot as plt
 
@@ -166,7 +167,13 @@ class Class_Analysis1(object):
 
 #-------------------------------------------------------
 # class inheritance to include some helper functions
+#  
 #
+# feature
+#    tuning F0 to maximize sum of harmonic strength
+#    frequency response estimation by curve fitting via F0 harmonic frequencies (fundamental and overtones) 
+#
+
 class Class_Analysis2(Class_Analysis1):
     def __init__(self, num_band=1024, fmin=40, fmax=8000, sr=44100, Q=40.0, \
                   moving_average_factor=50, down_sample_factor=10, \
@@ -229,13 +236,55 @@ class Class_Analysis2(Class_Analysis1):
             else:
                 F0_new=F0
             
-            # peak curve
-            func2 = interpolate.interp1d(self.freq_linear[peaks] , fout1[peaks], kind="cubic")
-            fout2 = func2(self.freq_linear[ peaks[0]: peaks[-1]])
-            peak_curve_peaks, _ = find_peaks(fout2,distance= F0_new , prominence=0.015) #0.02)
+            #--- tuning F0
+            # 1st step until 7 times harmonic
+            self.funcx=func1
+            self.numberx=7
+            rranges= [(F0_new * 0.9,  F0_new * 1.1)]
+            resbrute = optimize.brute( self.cost,rranges )
+            #print ('1st step. min F0 via optimize.brute. F0_new', resbrute[0])
+            F0_new= resbrute[0]
+            
+            # 2nd step  until 2kHz
+            upper_freq=2000
+            self.numberx=int(upper_freq / F0_new)
+            rranges= [(F0_new * 0.95,  F0_new * 1.05)]
+            resbrute = optimize.brute( self.cost,rranges )
+            #print ('2nd step. min F0 via optimize.brute. F0_new', resbrute[0])
+            F0_new= resbrute[0]
+            
+            # last, just compute harmonic frequencies until 6kHz
+            upper_freq=6000
+            self.number=int(upper_freq / F0_new)
+            self.hamonic_freq_list=np.linspace( F0_new, F0_new * self.number, self.number)
+            fout1_harmonic= func1(self.hamonic_freq_list)
+            
+            # set final candiate F0_new as pout
+            self.pout[l]= F0_new
+            #--- end of tuning F0
+            
+            # get index of the range
+            p0=np.where(self.freq_linear > F0_new )[0]
+            p1=np.where(self.freq_linear > F0_new * self.number )[0]
+            
+            # curve fitting via harmonic frequencies
+            func2 = interpolate.interp1d( self.hamonic_freq_list,fout1_harmonic , kind="cubic")
+            fout2 = func2(self.freq_linear[ p0[0]:p1[0]])
+            
+            #-- peak search
+            # try 1
+            thres0=0.05
+            peak_curve_peaks, _ = find_peaks(fout2,distance= F0_new, prominence= max(fout2) * thres0 )
+            # try 2 when there are not enough candiates
+            if len(peak_curve_peaks) < self.max_num_peaks-1:
+                thres0=thres0 * 0.75
+                peak_curve_peaks, _ = find_peaks(fout2,distance= F0_new, prominence= max(fout2) * thres0 )
+            
             if len(peak_curve_peaks) > 0:
                 idm= min(len(peak_curve_peaks),self.max_num_peaks)
-                self.fout[l,0:idm]=self.freq_linear[peak_curve_peaks[0:idm]]
+                self.fout[l,0:idm]=self.freq_linear[peak_curve_peaks[0:idm] + p0[0]]
+            
+            
             print ('-no. frame',l)
             print ('fout(peaks)', self.fout[l,:],' pout', self.pout[l])
             
@@ -244,9 +293,9 @@ class Class_Analysis2(Class_Analysis1):
                 ax1 = fig.add_subplot(211)
                 ax1.plot(self.mel.flist,self.out1[:,pos], 'r', label="BPF out")
                 ax1.plot(self.freq_linear, fout1, 'y', label="interpolate")
-                ax1.plot(self.freq_linear[peaks] , fout1[peaks] , 'x', ms=3)
-                ax1.plot(self.freq_linear[ peaks[0]: peaks[-1]], fout2, 'm', label="peak curve")
-                ax1.plot(self.freq_linear[peak_curve_peaks+peaks[0]] , fout2[peak_curve_peaks] , 'o', ms=3)
+                ax1.plot(self.hamonic_freq_list ,fout1_harmonic , 'x', ms=3, label="F0 harmonic")
+                ax1.plot(self.freq_linear[ p0[0]:p1[0]], fout2, 'm', label="curve fitting")
+                ax1.plot(self.freq_linear[peak_curve_peaks+p0[0]] , fout2[peak_curve_peaks] , 'o', ms=3, label="peak")
                 
                 plt.xlabel('Frequency [Hz]')
                 plt.ylabel('Amplitude')
@@ -256,7 +305,13 @@ class Class_Analysis2(Class_Analysis1):
                 plt.tight_layout()
                 plt.show()
             
-    
+    def cost(self, F0):
+        # compute sum of harmonic strength, to search F0 which maximize it
+        # 高調波成分の和を計算する。高調波成分の和が最大になるF0を探す。
+        hamonic_freq_listx=np.linspace( F0, F0 * self.numberx, self.numberx)
+        return -1. * np.sum( self.funcx(hamonic_freq_listx) )
+        
+        
     def show_one_channel(self,freq_show, freq_show2=None):
         index0= np.where(self.mel.flist >= freq_show)[0][0]
         print ('mel freq', self.mel.flist[index0])
