@@ -1,5 +1,10 @@
 /__pycahe__/
 /old/
+/result_figure_a/
+/result_figure_i/
+/result_figure_u/
+/result_figure_e/
+/result_figure_o/
 *.bat
 *.pyc
 *.md~
