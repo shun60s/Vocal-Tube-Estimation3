@@ -7,7 +7,8 @@
 #
 # argparse option:
 #   --frame   use previous frame LA0 (estimated length and area) as initial value of scipy's optimize.fmin. Specify start frame number.
-#   --BPF_out  compute BPF and show frequency response.
+#   --one_frame   compute only one frame. Specify the frame number.
+#   --BPF_out     compute BPF and show frequency response.
 #
 
 
@@ -27,7 +28,7 @@ from pre_compute5 import *
 from curve_fit1 import *
 from glottal import *
 from HPF import *
-from BPF_analysis1 import *
+from BPF_analysis2 import *
 
 
 # Check version
@@ -60,7 +61,7 @@ def show_figure1(tube, peaks_target, drop_peaks_target, fmin0, LA0, F0=None, BPF
     
     xw= 2.0 * np.pi * peaks_target
     ax1.plot( peaks_target , np.log10(tube( LA0, xw_input=xw)) * 20 , 'x', ms=3)
-    
+    ax1.set_xlim(0,tube.f[-1])
     plt.grid()
     
     
@@ -81,6 +82,8 @@ def show_figure1(tube, peaks_target, drop_peaks_target, fmin0, LA0, F0=None, BPF
             
         ax2.plot(BPF_freq, BPF_out, 'r', label="BPF out")
         
+        ax2.set_ylim(bottom=0)
+        ax2.set_xlim(0,tube.f[-1])
         plt.xlabel('Frequency [Hz]')
         plt.ylabel('Amplitude')
         plt.grid()
@@ -205,6 +208,7 @@ if __name__ == '__main__':
     parser.add_argument('--result_dir', '-r', default='result_figure', help='specify result directory')
     parser.add_argument('--BPF_out','-B', action='store_true', help='show BPF output')
     parser.add_argument('--frame', '-f', type=int, default=-1, help='specify start frame number, igonred if negative')
+    parser.add_argument('--one_frame', '-o', type=int, default=-1, help='compute only one frame. specify the frame number, igonred if negative')
     args = parser.parse_args()
     
     # sub directory control
@@ -237,6 +241,9 @@ if __name__ == '__main__':
         frame_list2= range(args.frame,-1,-1)
         frame_lists=[frame_list, frame_list2]
         dir2=str(args.frame)
+    elif args.one_frame >= 0:  # compute one frame only
+        frame_lists=[[ args.one_frame] ] 
+        dir2=str(args.one_frame)
     else:
         frame_list= range(len( CF1.peak_list_new))
         frame_lists=[frame_list]
