@@ -200,6 +200,44 @@ def get_path_name( dir0, path0, number0, dir2=None,):
         return dir0 + '/' + f + '_' + str(number0) + '.png'
 
 
+def save_file_LA(LA0, file_name="LA.txt"):
+    # save LA data as a text file
+    try:
+        with open(file_name, 'w') as f:
+            if len(LA0) == 8 or len(LA0) == 7: 
+                f.write( str(LA0[0]) +'\n') # L1
+                f.write( str(LA0[1]) +'\n') # L2
+                f.write( str(LA0[2]) +'\n') # L3
+                f.write( str(LA0[3]) +'\n') # L4
+                if len(LA0) == 7:
+                    A1, A2, A3, A4 = get_A1A2A3A4( LA0[4], LA0[5], LA0[6] )
+                else:
+                    A1, A2, A3, A4 = LA0[4], LA0[5], LA0[6], LA0[7]
+                f.write( str(A1) +'\n') # A1
+                f.write( str(A2) +'\n') # A2
+                f.write( str(A3) +'\n') # A3
+                f.write( str(A4) +'\n') # A4
+            
+            elif len(LA0) == 6 or len(LA0) == 5: 
+                f.write( str(LA0[0]) +'\n') # L1
+                f.write( str(LA0[1]) +'\n') # L2
+                f.write( str(LA0[2]) +'\n') # L3
+                if len(LA0) == 5:
+                    A1, A2, A3 = get_A1A2A3( LA0[3], LA0[4] )
+                else:
+                    A1, A2, A3 = LA0[3], LA0[4], LA0[5]
+                f.write( str(A1) +'\n') # A1
+                f.write( str(A2) +'\n') # A2
+                f.write( str(A3) +'\n') # A3
+            else:
+                print ('error: out of   number of tube model')
+
+            f.close()
+    except:
+       print ('write error')
+
+
+
 if __name__ == '__main__':
     #
     parser = argparse.ArgumentParser(description='load wav file and estimate tube model ')
@@ -209,6 +247,7 @@ if __name__ == '__main__':
     parser.add_argument('--BPF_out','-B', action='store_true', help='show BPF output')
     parser.add_argument('--frame', '-f', type=int, default=-1, help='specify start frame number, igonred if negative')
     parser.add_argument('--one_frame', '-o', type=int, default=-1, help='compute only one frame. specify the frame number, igonred if negative')
+    parser.add_argument('--LA_file', '-L', default=None, help='specify text file name to save length and area data. this is available when one_frame is active.')
     args = parser.parse_args()
     
     # sub directory control
@@ -296,4 +335,8 @@ if __name__ == '__main__':
             # use previous frame LA0 (estimated length and area) as initial value of next
             if args.frame >= 0:
                 next_X=res_brute[0].copy()
+            
+            # save length and area data  as a text file,  when one_frame and LA_file are active
+            if (args.LA_file is not None) and (args.one_frame >= 0):
+                save_file_LA(res_brute[0], args.LA_file)
         
